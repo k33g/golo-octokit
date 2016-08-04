@@ -2,6 +2,44 @@
 
 GitHub API + Golo
 
+```golo
+# search users
+let search = gitHubClient: searchUsers(keyword="k33g")
+log("Total: {0}", search: total_count())
+
+search: items(): each(|user| {
+  log("user: {0} {1} score: {2}", user: login(), user: name(), user: score())
+})
+
+# create repository
+let res = gitHubClientEnterprise: createRepository(
+  name="my-little-demo",
+  description="this is my repository",
+  private=false,
+  hasIssues=true
+)
+
+# add issue
+let issueDescription =
+"""
+## this is my issue
+
+:warning: I'm having a problem with this:
+
+`JSON.parse(all)`
+"""
+
+let issue = gitHubClientEnterprise: createIssue(
+  title="Ouch!",
+  body=issueDescription,
+  owner="k33g",
+  repository="my-little-demo"
+)
+
+# more to come...
+# WIP
+```
+
 ## Prerequisites
 
 ## Install Golo
