@@ -17,7 +17,6 @@ GitHub API + Golo
   # === GitHub ===
   export TOKEN_GITHUB_DOT_COM=your_generated_token_for_dot_com
   export TOKEN_GITHUB_ENTERPRISE=your_generated_token_for_enterprise
-  export TOKEN_GITHUB_OCTODEMO=your_generated_token_for_octodemo
   ```
 It will be useful to authenticate and authorize your scripts.
 
