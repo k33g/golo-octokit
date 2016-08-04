@@ -140,6 +140,54 @@ augment gitHubClient {
   }
 
   ----
+      title	string	Required. The title of the issue.
+      body	string	The contents of the issue.
+      milestone	integer	The number of the milestone to associate this issue with. NOTE: Only users with push access can set the milestone for new issues. The milestone is silently dropped otherwise.
+      labels	array of strings	Labels to associate with this issue. NOTE: Only users with push access can set labels for new issues. Labels are silently dropped otherwise.
+      assignees	array of strings	Logins for Users to assign to this issue. NOTE: Only users with push access can set assignees for new issues. Assignees are silently dropped otherwise.
+  ----
+  function createIssue = |this, title, body, labels, milestone, assignees, owner, repository| {
+    return JSON.toDynamicObjectTreeFromString(this: postData("/repos/"+owner+"/"+repository+"/issues", map[
+      ["title", title],
+      ["body", body],
+      ["milestone", milestone],
+      ["labels", labels],
+      ["assignees", assignees]
+    ]): data())
+  }
+  function createIssue = |this, title, body, labels, milestone, owner, repository| {
+    return JSON.toDynamicObjectTreeFromString(this: postData("/repos/"+owner+"/"+repository+"/issues", map[
+      ["title", title],
+      ["body", body],
+      ["milestone", milestone],
+      ["labels", labels]
+    ]): data())
+  }
+  ----
+  Add assignees to an Issue
+
+  This call adds the users passed in the assignees key (as their logins) to the issue.
+
+      POST /repos/:owner/:repo/issues/:number/assignees
+
+  Sample: TODO: test with 2.7 version
+
+      gitHubClientEnterprise: addAssignees(
+        issueNumber= issue: number(),
+        assignees=["babs", "buster"],
+        owner="k33g",
+        repository="my-little-demo"
+      )
+
+  ----
+  function addAssignees = |this, issueNumber, assignees, owner, repository| {
+    return JSON.toDynamicObjectTreeFromString(this: postData("/repos/"+owner+"/"+repository+"/issues"+issueNumber+"/assignees", map[
+      ["assignees", assignees]
+    ]): data())
+  }
+
+
+  ----
   # createLabel
 
       POST /repos/:owner/:repo/labels
@@ -187,6 +235,23 @@ augment gitHubClient {
       |labels, label| -> labels: append(JSON.toDynamicObjectTree(label))
     )
   }
+
+  ----
+  Add labels to an issue
+
+      POST /repos/:owner/:repo/issues/:number/labels
+
+  Input
+
+      [
+        "Label1",
+        "Label2"
+      ]
+  ----
+  function addLabelsToIssue = |this, issueNumber, labels, owner, repository| {
+    # TODO
+  }
+
 
   ----
   Create a milestone
