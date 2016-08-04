@@ -139,6 +139,106 @@ augment gitHubClient {
     ]): data())
   }
 
+  ----
+  # createLabel
+
+      POST /repos/:owner/:repo/labels
+
+  ## Parameters
+
+  - name	string	Required. The name of the label.
+  - color	string	Required. A 6 character hex code, without the leading #, identifying the color.
+
+  ----
+  function createLabel = |this, name, color, owner, repository| {
+    return JSON.toDynamicObjectTreeFromString(this: postData("/repos/"+owner+"/"+repository+"/labels", map[
+      ["name", name],
+      ["color", color]
+    ]): data())
+  }
+
+  function createLabel = |this, label, owner, repository| { # label is a DynamicObject
+    return JSON.toDynamicObjectTreeFromString(this: postData("/repos/"+owner+"/"+repository+"/labels", map[
+      ["name", label: name()],
+      ["color", label: color()]
+    ]): data())
+  }
+
+  function createLabels = |this, labels, owner, repository| {
+    let labelsList = list[]
+    labels: each(|label| { # label is a DynamicObject
+      labelsList: append(this: createLabel(label, owner, repository))
+    })
+    return labelsList
+  }
+
+  ----
+  # getLabels
+
+  List all labels for this repository
+
+    GET /repos/:owner/:repo/labels
+
+  ----
+  function getLabels = |this, owner, repository| {
+    let labelsList = JSON.parse(this: getData("/repos/"+owner+"/"+repository+"/labels"): data())
+    return labelsList: reduce(
+      list[],
+      |labels, label| -> labels: append(JSON.toDynamicObjectTree(label))
+    )
+  }
+
+  ----
+  Create a milestone
+
+      POST /repos/:owner/:repo/milestones
+
+  - title	string	Required. The title of the milestone.
+  - state	string	The state of the milestone. Either open or closed. Default: open
+  - description	string	A description of the milestone.
+  - TODO: due_on	string	The milestone due date. This is a timestamp in ISO 8601 format: YYYY-MM-DDTHH:MM:SSZ.
+
+  ----
+  function createMilestone = |this, title, state, description, owner, repository| {
+    return JSON.toDynamicObjectTreeFromString(this: postData("/repos/"+owner+"/"+repository+"/milestones", map[
+      ["title", title],
+      ["state", state],
+      ["description", description]
+    ]): data())
+  }
+
+  function createMilestone = |this, milestone, owner, repository| { # milestone is a DynamicObject
+    return JSON.toDynamicObjectTreeFromString(this: postData("/repos/"+owner+"/"+repository+"/milestones", map[
+      ["title", milestone: title()],
+      ["state", milestone: state()],
+      ["description", milestone: description()]
+    ]): data())
+  }
+
+  function createMilestones = |this, milestones, owner, repository| {
+    let milestonesList = list[]
+    milestones: each(|milestone| { # milestone is a DynamicObject
+      milestonesList: append(this: createMilestone(milestone, owner, repository))
+    })
+    return milestonesList
+  }
+
+  ----
+  # getMilestones
+
+  List all milestones for this repository
+
+    GET /repos/:owner/:repo/milestones
+
+  ----
+  function getMilestones = |this, owner, repository| {
+    let milestonesList = JSON.parse(this: getData("/repos/"+owner+"/"+repository+"/milestones"): data())
+    return milestonesList: reduce(
+      list[],
+      |milestones, milestone| -> milestones: append(JSON.toDynamicObjectTree(milestone))
+    )
+  }
+
 }
 
 ----
