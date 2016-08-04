@@ -63,3 +63,5 @@ It will be useful to authenticate and authorize your scripts.
 - `golo golo --files imports/*.golo main.golo`
 - `golo golo --files imports/*.golo repository.golo`
 - `golo golo --files imports/*.golo issues.golo`
+- `golo golo --files imports/*.golo labels.golo`
+- `golo golo --files imports/*.golo milestones.golo`
