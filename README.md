@@ -1,2 +1,3 @@
-# golo-octokit
+# golOctokit
+
 GitHub API + Golo
