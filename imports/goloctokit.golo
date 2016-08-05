@@ -390,10 +390,28 @@ augment gitHubClient {
     )
   }
 
+  ----
+  http://stackoverflow.com/questions/469695/decode-base64-data-in-java
+  ----
+  function toBase64 = |this, content| {
+    let bytes = content: getBytes("UTF-8")
+    return java.util.Base64.getEncoder(): encodeToString(bytes)
+  }
+
+  ----
+  # createCommit
+
+  ----
+  function createCommit = |this, fileName, content, message, branch, owner, repository| {
+    let resp = this: putData("/repos/"+owner+"/"+repository+"/contents/"+fileName, map[
+      ["message", message],
+      ["branch", branch],
+      ["content", this: toBase64(content)]
+    ])
+    return JSON.toDynamicObjectTreeFromString(resp: data())
+  }
+
 }
-
-
-
 
 ----
 # Constructor
