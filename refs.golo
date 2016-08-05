@@ -1,4 +1,4 @@
-module branch
+module refs
 
 import gololang.Errors
 import goloctokit
@@ -16,9 +16,16 @@ function main = |args| {
     token= TOKEN_GITHUB_ENTERPRISE
   )
 
-  gitHubClientEnterprise: createBranch(
-    name="wip-killer-feature-again",
-    from="master",
+  let masterRef = gitHubClientEnterprise: getReference(
+    ref="heads/master",
+    owner="k33g",
+    repository="my-little-demo"
+  )
+  log("sha of master: {0}", masterRef: object(): sha())
+
+  gitHubClientEnterprise: createReference(
+    ref="refs/heads/wip-killer-feature",
+    sha=masterRef: object(): sha(),
     owner="k33g",
     repository="my-little-demo"
   )

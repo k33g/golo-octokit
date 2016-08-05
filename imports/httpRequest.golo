@@ -42,6 +42,10 @@ function request = |method, uri, data, headers| {
   let responseCode = connection: getResponseCode()
   let responseMessage = connection: getResponseMessage()
 
+  println("LOG> Http.request > responseCode: " + responseCode)
+  println("LOG> Http.request > responseMessage: " + responseMessage)
+
+
   if isOk(responseCode) {
     let responseText = java.util.Scanner(
       connection: getInputStream(),
@@ -50,6 +54,6 @@ function request = |method, uri, data, headers| {
     return response(responseCode, responseMessage, responseText)
     #return response(responseCode, responseMessage, JSON.parse(responseText))
   } else {
-    response(responseCode, responseMessage, null)
+    return response(responseCode, responseMessage, null)
   }
 }

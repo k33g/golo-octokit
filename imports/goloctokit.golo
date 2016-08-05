@@ -26,16 +26,24 @@ augment gitHubClient {
     }
   }
   function getData = |this, path| {
-    #println("LOG> getData: " + this: getUri(path))
-    return Http.request("GET", this: getUri(path), null, this: getHeaders())
+    println("LOG> getData: " + this: getUri(path))
+    let resp = Http.request("GET", this: getUri(path), null, this: getHeaders())
+    println("LOG> getData > response: " + resp)
+    return resp
   }
 
   function postData = |this, path, data| {
-    return Http.request("POST", this: getUri(path), JSON.stringify(data), this: getHeaders())
+    println("LOG> postData: " + this: getUri(path))
+    let resp =  Http.request("POST", this: getUri(path), JSON.stringify(data), this: getHeaders())
+    println("LOG> postData > response: " + resp)
+    return resp
   }
 
   function putData = |this, path, data| {
-    return Http.request("PUT", this: getUri(path), JSON.stringify(data), this: getHeaders())
+    println("LOG> putData: " + this: getUri(path))
+    let resp =  Http.request("PUT", this: getUri(path), JSON.stringify(data), this: getHeaders())
+    println("LOG> putData > response: " + resp)
+    return resp
   }
 
   # TODO: deleteData
@@ -331,8 +339,58 @@ augment gitHubClient {
     return JSON.toDynamicObjectTreeFromString(resp: data())
   }
 
-}
+  ----
+  Create a Reference
 
+      POST /repos/:owner/:repo/git/refs
+
+  Parameters
+  - ref	type	Required. The name of the fully qualified reference (ie: refs/heads/master). If it doesn't start with 'refs' and have at least two slashes, it will be rejected.
+  - sha	type	Required. The SHA1 value to set this reference to
+
+  Input
+
+      {
+        "ref": "refs/heads/featureA",
+        "sha": "aa218f56b14c9653891f9e74264a383fa43fefbd"
+      }
+
+      function createReference = |this, ref, sha, owner, repository| {
+        return JSON.toDynamicObjectTreeFromString(this: postData("/repos/"+owner+"/"+repository+"/git/refs", map[
+          ["ref", ref],
+          ["sha", sha]
+        ])?: data() orIfNull "{}")
+      }
+
+  TODO:
+  - if branch already exists -> error stop then gololang.Error
+  - postData -> @result or trying { and test response -> return Result.fail }
+  ----
+  function createReference = |this, ref, sha, owner, repository| {
+    let resp = this: postData("/repos/"+owner+"/"+repository+"/git/refs", map[
+      ["ref", ref],
+      ["sha", sha]
+    ])
+    return JSON.toDynamicObjectTreeFromString(resp: data())
+  }
+
+  function createBranch = |this, name, from, owner, repository| {
+
+    let sha = this: getReference(
+      ref="heads/"+from,
+      owner=owner,
+      repository=repository
+    ): object(): sha()
+
+    return this: createReference(
+      ref="refs/heads/"+name,
+      sha=sha,
+      owner=owner,
+      repository=repository
+    )
+  }
+
+}
 
 
 
