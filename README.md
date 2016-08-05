@@ -50,7 +50,7 @@ let issue = gitHubClientEnterprise: createIssue(
 
 - You have to create **personal access token** in your GitHub (.com, Enterprise, ...) settings with all rights
 - Then, you have to set some environment variables:
-  - type ``
+  - type
   ```shell
   # === GitHub ===
   export TOKEN_GITHUB_DOT_COM=your_generated_token_for_dot_com
