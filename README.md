@@ -68,3 +68,4 @@ It will be useful to authenticate and authorize your scripts.
 - `golo golo --files imports/*.golo big-issue.golo`
 - `golo golo --files imports/*.golo refs.golo`
 - `golo golo --files imports/*.golo branch.golo`
+- `golo golo --files imports/*.golo commits.golo`
