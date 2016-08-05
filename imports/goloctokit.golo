@@ -411,6 +411,19 @@ augment gitHubClient {
     return JSON.toDynamicObjectTreeFromString(resp: data())
   }
 
+  ----
+  # createPullRequest
+  ???
+  ----
+  function createPullRequest = |this, title, body, head, base, owner, repository| {
+    let resp = this: postData("/repos/"+owner+"/"+repository+"/pulls", map[
+      ["title", title],
+      ["body", body],
+      ["head", head],
+      ["base", base]
+    ])
+    return JSON.toDynamicObjectTreeFromString(resp: data())
+  }
 }
 
 ----
