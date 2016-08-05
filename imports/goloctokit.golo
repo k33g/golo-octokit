@@ -26,6 +26,7 @@ augment gitHubClient {
     }
   }
   function getData = |this, path| {
+    #println("LOG> getData: " + this: getUri(path))
     return Http.request("GET", this: getUri(path), null, this: getHeaders())
   }
 
@@ -304,7 +305,37 @@ augment gitHubClient {
     )
   }
 
+  ----
+  Get a Reference
+
+      GET /repos/:owner/:repo/git/refs/:ref
+
+    The ref in the URL must be formatted as heads/branch, not just branch.
+    For example, the call to get the data for a branch named skunkworkz/featureA would be:
+
+      GET /repos/:owner/:repo/git/refs/heads/skunkworkz/featureA
+
+  Return:
+      {
+        "ref": "refs/heads/featureA",
+        "url": "https://api.github.com/repos/octocat/Hello-World/git/refs/heads/featureA",
+        "object": {
+          "type": "commit",
+          "sha": "aa218f56b14c9653891f9e74264a383fa43fefbd",
+          "url": "https://api.github.com/repos/octocat/Hello-World/git/commits/aa218f56b14c9653891f9e74264a383fa43fefbd"
+        }
+      }
+  ----
+  function getReference = |this, ref, owner, repository| {
+    let resp = this: getData("/repos/"+owner+"/"+repository+"/git/refs/"+ref)
+    return JSON.toDynamicObjectTreeFromString(resp: data())
+  }
+
 }
+
+
+
+
 
 ----
 # Constructor
