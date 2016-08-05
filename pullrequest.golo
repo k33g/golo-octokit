@@ -23,6 +23,4 @@ function main = |args| {
     owner="k33g",
     repository="my-little-demo"
   )
-
-  println("---------------------------------------------")
 }

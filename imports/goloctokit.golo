@@ -413,7 +413,6 @@ augment gitHubClient {
 
   ----
   # createPullRequest
-  ???
   ----
   function createPullRequest = |this, title, body, head, base, owner, repository| {
     let resp = this: postData("/repos/"+owner+"/"+repository+"/pulls", map[
