@@ -13,10 +13,12 @@ function main = |args| {
   let TOKEN_GITHUB_DOT_COM = System.getenv("TOKEN_GITHUB_DOT_COM")
 
   let gitHubClientEnterprise = GitHubClient(
-    scheme= "http",
-    host= "ghe.k33g",
-    port= -1,
+    uri= "http://ghe.k33g/api/v3",
     token= TOKEN_GITHUB_ENTERPRISE
+  )
+  let gitHubClient = GitHubClient(
+    uri= "https://api.github.com",
+    token= TOKEN_GITHUB_DOT_COM
   )
 
   let k33g = gitHubClientEnterprise: getUser("k33g")
