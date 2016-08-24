@@ -60,6 +60,10 @@ augment gitHubClient {
   }
 
   # TODO: deleteData
+  ----
+  The Zen of GitHub
+  ----
+  function octocat = |this| -> this: getData("/octocat"): data()
 
   ----
   # getUser
