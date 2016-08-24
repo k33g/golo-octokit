@@ -1,5 +1,20 @@
 module Http
 
+import gololang.Errors
+
+#System.setProperty("log_http", "false")
+local function logging = {
+  return trying(-> System.getProperty("log_http"))
+    : either(
+      |res| -> res?: equals("true") orIfNull false,
+      |err| -> false
+    )
+}
+
+local function logging = |what| {
+  if logging!() is true { println(what) }
+}
+
 ----
 # isOk
 Test if response is OK
@@ -42,8 +57,8 @@ function request = |method, uri, data, headers| {
   let responseCode = connection: getResponseCode()
   let responseMessage = connection: getResponseMessage()
 
-  println("LOG> Http.request > responseCode: " + responseCode)
-  println("LOG> Http.request > responseMessage: " + responseMessage)
+  logging("LOG> Http.request > responseCode: " + responseCode)
+  logging("LOG> Http.request > responseMessage: " + responseMessage)
 
 
   if isOk(responseCode) {
@@ -51,6 +66,7 @@ function request = |method, uri, data, headers| {
       connection: getInputStream(),
       "UTF-8"
     ): useDelimiter("\\A"): next() # String responseText
+    logging("LOG> Http.request > responseText: " + responseText)
     return response(responseCode, responseMessage, responseText)
     #return response(responseCode, responseMessage, JSON.parse(responseText))
   } else {

@@ -70,3 +70,21 @@ It will be useful to authenticate and authorize your scripts.
 - `golo golo --files imports/*.golo branch.golo`
 - `golo golo --files imports/*.golo commits.golo`
 - `golo golo --files imports/*.golo pullrequest.golo`
+
+## Building a CI server
+
+Refs: https://developer.github.com/guides/building-a-ci-server/
+
+### Writing your server
+
+We'll write a quick SparkJava app to prove that our local connections are working. Let's start with this:
+
+```golo
+# see 01-ci-server.golo
+
+
+```
+
+We need SparkJava and slf4j jars. I put it in the `jars directory`, then to run the sample, type this:
+
+    golo golo --classpath jars/*.jar --files imports/*.golo 01-ci-server.golo

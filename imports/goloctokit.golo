@@ -3,15 +3,31 @@ module goloctokit
 import Http
 import JSON
 
+import gololang.Errors
+
+#  System.setProperty("log_goloctokit", "false")
+local function logging = {
+  return trying(-> System.getProperty("log_goloctokit"))
+    : either(
+      |res| -> res?: equals("true") orIfNull false,
+      |err| -> false
+    )
+}
+
+local function logging = |what| {
+  if logging!() is true { println(what) }
+}
+
+
 ----
 # GitHubClient
 ----
 struct gitHubClient = {
-  baseUri, prefix, credentials
+  baseUri, credentials
 }
 
 augment gitHubClient {
-
+  # TODO: add headers
   function getHeaders = |this| -> [
     Http.header("Content-Type", "application/json"),
     Http.header("User-Agent", "GitHubGolo/1.0.0"),
@@ -20,33 +36,34 @@ augment gitHubClient {
   ]
 
   function getUri = |this, path| {
-    return this: baseUri() + match {
-      when this: prefix() is null or path: startsWith(this: prefix()) then path
-      otherwise this: prefix() + path
-    }
+    return this: baseUri() + path
   }
   function getData = |this, path| {
-    println("LOG> getData: " + this: getUri(path))
+    logging("LOG> getData: " + this: getUri(path))
     let resp = Http.request("GET", this: getUri(path), null, this: getHeaders())
-    println("LOG> getData > response: " + resp)
+    logging("LOG> getData > response: " + resp)
     return resp
   }
 
   function postData = |this, path, data| {
-    println("LOG> postData: " + this: getUri(path))
+    logging("LOG> postData: " + this: getUri(path))
     let resp =  Http.request("POST", this: getUri(path), JSON.stringify(data), this: getHeaders())
-    println("LOG> postData > response: " + resp)
+    logging("LOG> postData > response: " + resp)
     return resp
   }
 
   function putData = |this, path, data| {
-    println("LOG> putData: " + this: getUri(path))
+    logging("LOG> putData: " + this: getUri(path))
     let resp =  Http.request("PUT", this: getUri(path), JSON.stringify(data), this: getHeaders())
-    println("LOG> putData > response: " + resp)
+    logging("LOG> putData > response: " + resp)
     return resp
   }
 
   # TODO: deleteData
+  ----
+  The Zen of GitHub
+  ----
+  function octocat = |this| -> this: getData("/octocat"): data()
 
   ----
   # getUser
@@ -117,6 +134,7 @@ augment gitHubClient {
       ["description", description],
       ["private", private],
       ["has_issues", hasIssues],
+      ["has_wiki", true],
       ["auto_init", true]
     ]): data())
   }
@@ -127,9 +145,23 @@ augment gitHubClient {
       ["description", description],
       ["private", private],
       ["has_issues", hasIssues],
+      ["has_wiki", true],
       ["auto_init", true]
     ]): data())
   }
+
+  function createRepository = |this, name, description, organization, private, hasIssues, teamId| {
+    return JSON.toDynamicObjectTreeFromString(this: postData("/orgs/"+organization+"/repos", map[
+      ["name", name],
+      ["description", description],
+      ["private", private],
+      ["has_issues", hasIssues],
+      ["has_wiki", true],
+      ["team_id", teamId],
+      ["auto_init", true]
+    ]): data())
+  }
+
 
   ----
   # createIssue
@@ -145,6 +177,14 @@ augment gitHubClient {
     return JSON.toDynamicObjectTreeFromString(this: postData("/repos/"+owner+"/"+repository+"/issues", map[
       ["title", title],
       ["body", body]
+    ]): data())
+  }
+
+  function createIssue = |this, title, body, labels, owner, repository| {
+    return JSON.toDynamicObjectTreeFromString(this: postData("/repos/"+owner+"/"+repository+"/issues", map[
+      ["title", title],
+      ["body", body],
+      ["labels", labels]
     ]): data())
   }
 
@@ -190,8 +230,19 @@ augment gitHubClient {
 
   ----
   function addAssignees = |this, issueNumber, assignees, owner, repository| {
-    return JSON.toDynamicObjectTreeFromString(this: postData("/repos/"+owner+"/"+repository+"/issues"+issueNumber+"/assignees", map[
+    return JSON.toDynamicObjectTreeFromString(this: postData("/repos/"+owner+"/"+repository+"/issues/"+issueNumber+"/assignees", map[
       ["assignees", assignees]
+    ]): data())
+  }
+
+  ----
+  Add comment to an issue
+  POST /repos/:owner/:repo/issues/:number/comments
+
+  ----
+  function addCommentToIssue = |this, issueNumber, body, owner, repository| {
+    return JSON.toDynamicObjectTreeFromString(this: postData("/repos/"+owner+"/"+repository+"/issues/"+issueNumber+"/comments", map[
+      ["body", body]
     ]): data())
   }
 
@@ -281,11 +332,21 @@ augment gitHubClient {
     ]): data())
   }
 
+  function createMilestone = |this, title, state, description, owner, repository, due_on| {
+    return JSON.toDynamicObjectTreeFromString(this: postData("/repos/"+owner+"/"+repository+"/milestones", map[
+      ["title", title],
+      ["state", state],
+      ["description", description],
+      ["due_on", due_on]
+    ]): data())
+  }
+
   function createMilestone = |this, milestone, owner, repository| { # milestone is a DynamicObject
     return JSON.toDynamicObjectTreeFromString(this: postData("/repos/"+owner+"/"+repository+"/milestones", map[
       ["title", milestone: title()],
       ["state", milestone: state()],
-      ["description", milestone: description()]
+      ["description", milestone?: description()],
+      ["due_on", milestone?: due_on()]
     ]): data())
   }
 
@@ -423,27 +484,53 @@ augment gitHubClient {
     ])
     return JSON.toDynamicObjectTreeFromString(resp: data())
   }
+
+  ----
+  # Teams
+  ----
+  function getTeams = |this, organization| {
+    let organizationList = JSON.parse(this: getData("/orgs/"+organization+"/teams"): data())
+    return organizationList: reduce(
+      list[],
+      |organizations, organization| -> organizations: append(JSON.toDynamicObjectTree(organization))
+    )
+  }
+  function getTeamByName = |this, name, organization| {
+    return this: getTeams(organization): find(|team| { return team: name(): equals(name) })
+  }
+  function getTeamById = |this, id, organization| {
+    return JSON.toDynamicObjectTreeFromString(this: getData("/teams/"+id): data())
+  }
+
+
+  function updateTeamRepository = |this, id, organization, repository, permission| {
+    let resp = this: putData("/teams/"+id+"/repos/"+organization+"/"+repository, map[
+      ["permission", permission]
+    ])
+    if resp: data() isnt null {
+      return JSON.toDynamicObjectTreeFromString(resp: data())
+    } else {
+      return null # always return `Status: 204 No Content`
+    }
+
+  }
+
 }
 
 ----
 # Constructor
+https://api.github.com
+http://ghe.k33g/api/v3
+http://github.at.home/api/v3
 ----
-function GitHubClient = |host, port, scheme, token| {
-  let prefix = match {
-    when host: equals("api.github.com") then null
-    otherwise "/api/v3"
-  }
-  let uri = match {
-    when port > 0 then scheme + "://" + host + port
-    otherwise scheme + "://" + host
-  }
+function GitHubClient = |uri, token| {
+
   let credentials = match {
     when token isnt null and token: length() > 0 then "token" + ' ' + token
     otherwise null
   }
   return gitHubClient(
     baseUri= uri,
-    prefix= prefix,
     credentials= credentials
   )
 }
