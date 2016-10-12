@@ -461,6 +461,7 @@ augment gitHubClient {
 
   ----
   # createCommit
+
   ----
   function createCommit = |this, fileName, content, message, branch, owner, repository| {
     let resp = this: putData("/repos/"+owner+"/"+repository+"/contents/"+fileName, map[
@@ -471,7 +472,7 @@ augment gitHubClient {
     return JSON.toDynamicObjectTreeFromString(resp: data())
   }
 
-  # ???
+  # WORK IN PROGRESS
   function fetchCommitBySHA = |this, sha, owner, repository| {
     let resp = this: getData("/repos/"+owner+"/"+repository+"/git/commits/"+sha)
     return JSON.toDynamicObjectTreeFromString(resp: data())
@@ -485,43 +486,14 @@ augment gitHubClient {
     return JSON.toDynamicObjectTreeFromString(resp: data())
   }
 
-  ----
-  # ---> to delete
-  let commit = ciBot: fetchSingleCommit(sha, owner, repositoryName)
-
-  let path = "/repos/" + owner + "/" + repositoryName + "/contents/" + commit: files(): get(0): filename() + "?ref=" + ref
-
-  let encodedContent = ciBot: fetchContent(
-    path=commit: files(): get(0): filename() + "?ref=" + ref,
-    owner=owner,
-    repository=repositoryName,
-    decode=true
-  ): content()
-
-  println(
-    encodedContent
-  )
-  let bytes = java.util.Base64.getDecoder(): decode(encodedContent)
-  println(bytes)
-
-  #try {println("STRING: " + String(bytes, "UTF-8"))} catch (err) {println(err: message())}
-
-  println("path: " + path)
-  # End of ---> to delete
-  ----
   function fetchContent = |this, path, owner, repository, decode| {
     let resp = this: getData("/repos/"+owner+"/"+repository+"/contents/"+path)
-    #let data = JSON.toDynamicObjectTreeFromString(resp: data())
-    let data = JSON.parse(resp: data())
-
+    let data = JSON.toDynamicObjectTreeFromString(resp: data())
     if decode is true {
-      # foo
+
     }
     return data
   }
-
-
-
 
   ----
   # createPullRequest
@@ -560,7 +532,6 @@ augment gitHubClient {
     ])
     return JSON.toDynamicObjectTreeFromString(resp: data())
   }
-
   function getTeams = |this, organization| {
     let organizationList = JSON.parse(this: getData("/orgs/"+organization+"/teams"): data())
     return organizationList: reduce(
@@ -600,6 +571,41 @@ augment gitHubClient {
     ])
     return JSON.toDynamicObjectTreeFromString(resp: data())
   }
+
+
+  ----
+  # Hooks
+  ----
+  function createHook = |this, owner, repository, hookName, hookConfig, hookEvents, active| {
+    let config = hookConfig
+    let events =  hookEvents
+    let params = map[
+      ["name", hookName],
+      ["config",config ],
+      ["events", events],
+      ["active", active]
+    ]
+
+    let resp = this: postData("/repos/"+owner+"/"+repository+"/hooks", params)
+    #return JSON.toDynamicObjectTreeFromString(resp: data())
+    return resp
+  }
+
+  function createOrganizationHook = |this, org, hookName, hookConfig, hookEvents, active| {
+    let config = hookConfig
+    let events =  hookEvents
+    let params = map[
+      ["name", hookName],
+      ["config",config ],
+      ["events", events],
+      ["active", active]
+    ]
+    #println("/orgs/"+org+"/hooks")
+    let resp = this: postData("/orgs/"+org+"/hooks", params)
+    #return JSON.toDynamicObjectTreeFromString(resp: data())
+    return resp
+  }
+
 
 }
 
