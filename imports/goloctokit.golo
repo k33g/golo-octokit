@@ -461,7 +461,6 @@ augment gitHubClient {
 
   ----
   # createCommit
-
   ----
   function createCommit = |this, fileName, content, message, branch, owner, repository| {
     let resp = this: putData("/repos/"+owner+"/"+repository+"/contents/"+fileName, map[
@@ -471,6 +470,58 @@ augment gitHubClient {
     ])
     return JSON.toDynamicObjectTreeFromString(resp: data())
   }
+
+  # ???
+  function fetchCommitBySHA = |this, sha, owner, repository| {
+    let resp = this: getData("/repos/"+owner+"/"+repository+"/git/commits/"+sha)
+    return JSON.toDynamicObjectTreeFromString(resp: data())
+  }
+
+  # Get a single commit
+  # GET /repos/:owner/:repo/commits/:sha
+  # https://developer.github.com/v3/repos/commits/#get-a-single-commit
+  function fetchSingleCommit = |this, sha, owner, repository| {
+    let resp = this: getData("/repos/"+owner+"/"+repository+"/commits/"+sha)
+    return JSON.toDynamicObjectTreeFromString(resp: data())
+  }
+
+  ----
+  # ---> to delete
+  let commit = ciBot: fetchSingleCommit(sha, owner, repositoryName)
+
+  let path = "/repos/" + owner + "/" + repositoryName + "/contents/" + commit: files(): get(0): filename() + "?ref=" + ref
+
+  let encodedContent = ciBot: fetchContent(
+    path=commit: files(): get(0): filename() + "?ref=" + ref,
+    owner=owner,
+    repository=repositoryName,
+    decode=true
+  ): content()
+
+  println(
+    encodedContent
+  )
+  let bytes = java.util.Base64.getDecoder(): decode(encodedContent)
+  println(bytes)
+
+  #try {println("STRING: " + String(bytes, "UTF-8"))} catch (err) {println(err: message())}
+
+  println("path: " + path)
+  # End of ---> to delete
+  ----
+  function fetchContent = |this, path, owner, repository, decode| {
+    let resp = this: getData("/repos/"+owner+"/"+repository+"/contents/"+path)
+    #let data = JSON.toDynamicObjectTreeFromString(resp: data())
+    let data = JSON.parse(resp: data())
+
+    if decode is true {
+      # foo
+    }
+    return data
+  }
+
+
+
 
   ----
   # createPullRequest
@@ -486,8 +537,30 @@ augment gitHubClient {
   }
 
   ----
+  # Organizations
+  ----
+  function createOrganization = |this, login, admin, profile_name| {
+    let resp = this: postData("/admin/organizations", map[
+      ["login", login],
+      ["admin", admin],
+      ["profile_name", profile_name]
+    ])
+    return JSON.toDynamicObjectTreeFromString(resp: data())
+  }
+  ----
   # Teams
   ----
+  function createTeam = |this, org, name, description, repo_names, privacy, permission| {
+    let resp = this: postData("/orgs/"+org+"/teams", map[
+      ["name", name],
+      ["description", description],
+      ["repo_names", repo_names],
+      ["privacy", privacy],
+      ["permission", permission]
+    ])
+    return JSON.toDynamicObjectTreeFromString(resp: data())
+  }
+
   function getTeams = |this, organization| {
     let organizationList = JSON.parse(this: getData("/orgs/"+organization+"/teams"): data())
     return organizationList: reduce(
@@ -512,7 +585,20 @@ augment gitHubClient {
     } else {
       return null # always return `Status: 204 No Content`
     }
+  }
 
+  function addTeamMembership = |this, teamId, userName, role| {
+    let resp = this: putData("/teams/"+teamId+"/memberships/"+userName, map[
+      ["role", role]
+    ])
+    return JSON.toDynamicObjectTreeFromString(resp: data())
+  }
+  # admin or member
+  function addOrganizationMembership = |this, org, userName, role| {
+    let resp = this: putData("/orgs/"+org+"/memberships/"+userName, map[
+      ["role", role]
+    ])
+    return JSON.toDynamicObjectTreeFromString(resp: data())
   }
 
 }

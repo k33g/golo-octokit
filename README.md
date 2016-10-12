@@ -77,6 +77,12 @@ Refs: https://developer.github.com/guides/building-a-ci-server/
 
 ### Writing your server
 
+We need to build SparkJava:
+```
+cd jars
+mvn compile assembly:single
+```
+
 We'll write a quick SparkJava app to prove that our local connections are working. Let's start with this:
 
 ```golo
