@@ -18,6 +18,8 @@ println(geek())
 ```
 """
 
+# golo golo --files imports/*.golo get-contents.golo
+
 function main = |args| {
 
   let TOKEN_GITHUB_ENTERPRISE = System.getenv("TOKEN_GHE_27_K33G")
@@ -29,7 +31,7 @@ function main = |args| {
 
   # read content
   try {
-    let content = ghCli: fetchContent(
+    let fileInfo = ghCli: fetchContent(
       path="src/Container.js",
       owner="ACME",
       repository="stools",
@@ -37,17 +39,14 @@ function main = |args| {
     )
     #: content()
 
-    println(content: get("content"))
-    #println(content: getClass(): getName())
-
-    let decodedContent = java.util.Base64.getDecoder(): decode(content: get("content"))
+    println(fileInfo: content())
 
   } catch (err) {
     err: printStackTrace()
   }
 
   try {
-    let content = ghCli: fetchContent(
+    let fileInfo = ghCli: fetchContent(
       path="src/Maybe.js?ref=wip-maybe",
       owner="ACME",
       repository="stools",
@@ -55,16 +54,18 @@ function main = |args| {
     )
     #: content()
 
-    println(content)
-    #let decodedContent = java.util.Base64.getDecoder(): decode(content)
+    println(fileInfo: name())
+    println(fileInfo: path())
+    println(fileInfo: sha())
+    println(fileInfo: size())
+    println(fileInfo: type())
+    println(fileInfo: html_url())
+    println(fileInfo: content())
+
 
   } catch (err) {
     err: printStackTrace()
   }
-
-
-
-
 
   println("---------------------------------------------")
 }

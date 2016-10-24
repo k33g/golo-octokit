@@ -490,9 +490,11 @@ augment gitHubClient {
     let resp = this: getData("/repos/"+owner+"/"+repository+"/contents/"+path)
     let data = JSON.toDynamicObjectTreeFromString(resp: data())
     if decode is true {
-
+      let decoder = java.util.Base64.getMimeDecoder()
+      let bytesDecoded = decoder: decode(data: content(): getBytes())
+      data: content(String(bytesDecoded))
     }
-    return data
+    return data    
   }
 
   ----
